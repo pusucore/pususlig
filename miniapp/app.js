@@ -7,6 +7,7 @@ const teams = [
   ['fenerbahce','Fenerbahçe',3,'TR'],['galatasaray','Galatasaray',3,'TR'],['feyenoord','Feyenoord',3,'NL'],['lille','Lille',3,'FR'],['bodo-glimt','Bodø/Glimt',3,'NO'],['napoli','Napoli',3,'IT'],['leipzig','RB Leipzig',3,'DE'],['villarreal','Villarreal',3,'ES'],['shakhtar','Shakhtar Donetsk',3,'UA'],
   ['slavia-prague','Slavia Prag',4,'CZ'],['stuttgart','Stuttgart',4,'DE'],['aek','AEK',4,'GR'],['slovan','Slovan Bratislava',4,'SK'],['lask','LASK Linz',4,'AT'],['como','Como',4,'IT'],['lens','Lens',4,'FR'],['viking','Viking FK',4,'NO'],['sabah','Sabah FC',4,'AZ'],
 ].map(([id,name,pot,country],i)=>({id,name,pot,country,spriteX:Math.floor(i/9),spriteY:i%9}));
+
 const byId = new Map(teams.map(t=>[t.id,t]));
 const picks = { fenerbahce: new Set(), galatasaray: new Set() };
 let active = 'fenerbahce';
@@ -20,6 +21,7 @@ function countryCount(target,country){ return [...picks[target]].map(id=>byId.ge
 function isComplete(target){ return picks[target].size===8 && [1,2,3,4].every(p=>selectedByPot(target,p).length===2); }
 
 function setMessage(msg=''){ statusEl.textContent=msg; }
+
 function canSelect(target,team){
   if(team.country==='TR') return {ok:false,why:'Aynı ülke takımları eşleşemez.'};
   if(selectedByPot(target,team.pot).length>=2) return {ok:false,why:`${team.pot}. torbadan zaten 2 takım seçtin.`};
@@ -35,6 +37,16 @@ function toggle(team){
   set.add(team.id); setMessage(''); try{tg?.HapticFeedback?.selectionChanged()}catch{}; render();
 }
 
+function logoMarkup(team){
+  const left = -(team.spriteX * 100);
+  const top = -(team.spriteY * 100);
+  return `<span class="team-logo" role="img" aria-label="${team.name}">
+    <img src="./assets/team-sprite.webp?v=4" alt="" draggable="false"
+      style="left:${left}%;top:${top}%"
+      onerror="this.closest('.team-logo').classList.add('logo-error');this.remove()">
+  </span>`;
+}
+
 function render(){
   picker.innerHTML='';
   for(let pot=1;pot<=4;pot++){
@@ -43,10 +55,14 @@ function render(){
     section.innerHTML=`<div class="pot-head"><div class="pot-title">${pot}. TORBA</div><div class="pot-count">${chosen}/2 seçildi</div></div><div class="team-grid"></div>`;
     const grid=section.querySelector('.team-grid');
     teams.filter(t=>t.pot===pot && t.country!=='TR').forEach(team=>{
-      const selected=picks[active].has(team.id); const allowed=selected||canSelect(active,team).ok;
-      const b=document.createElement('button'); b.type='button'; b.className=`team-card${selected?' selected':''}${!allowed?' disabled':''}`;
-      b.innerHTML=`<span class="check">${selected?'✓':''}</span><span class="team-logo" role="img" aria-label="${team.name}" style="--x:${team.spriteX};--y:${team.spriteY}"></span><span class="team-name">${team.name}</span>`;
-      b.addEventListener('click',()=>toggle(team)); grid.appendChild(b);
+      const selected=picks[active].has(team.id);
+      const allowed=selected||canSelect(active,team).ok;
+      const b=document.createElement('button');
+      b.type='button';
+      b.className=`team-card${selected?' selected':''}${!allowed?' disabled':''}`;
+      b.innerHTML=`<span class="check">${selected?'✓':''}</span>${logoMarkup(team)}<span class="team-name">${team.name}</span>`;
+      b.addEventListener('click',()=>toggle(team));
+      grid.appendChild(b);
     });
     picker.appendChild(section);
   }
@@ -58,8 +74,13 @@ function render(){
 }
 
 document.querySelectorAll('.team-tab').forEach(btn=>btn.addEventListener('click',()=>{
-  active=btn.dataset.target; document.querySelectorAll('.team-tab').forEach(x=>x.classList.toggle('active',x===btn)); setMessage(''); render(); window.scrollTo({top:document.querySelector('.team-tabs').offsetTop-4,behavior:'smooth'});
+  active=btn.dataset.target;
+  document.querySelectorAll('.team-tab').forEach(x=>x.classList.toggle('active',x===btn));
+  setMessage('');
+  render();
+  window.scrollTo({top:document.querySelector('.team-tabs').offsetTop-4,behavior:'smooth'});
 }));
+
 pbu.addEventListener('input',render);
 
 submitBtn.addEventListener('click',()=>{
@@ -67,10 +88,24 @@ submitBtn.addEventListener('click',()=>{
   if(!username){ setMessage('Pusulabet kullanıcı adı zorunlu.'); return; }
   if(!isComplete('fenerbahce')||!isComplete('galatasaray')){ setMessage('Her iki takım için de 8 rakibi tamamla.'); return; }
   if(!tg?.sendData){ setMessage('Kayıt için bu sayfayı Telegram botundaki Mini App butonundan açmalısın.'); return; }
-  const payload={type:'sl_draw_submission',pusulabet_username:username,fenerbahce:[...picks.fenerbahce],galatasaray:[...picks.galatasaray]};
-  submitBtn.disabled=true; submitBtn.textContent='Kaydediliyor…';
-  try{ tg.sendData(JSON.stringify(payload)); tg.HapticFeedback?.notificationOccurred('success'); setMessage('Tahminin bota gönderildi.'); setTimeout(()=>tg.close(),700); }
-  catch(e){ submitBtn.disabled=false; submitBtn.textContent='Tahminimi Kaydet'; setMessage('Gönderim başarısız. Mini App’i bottan tekrar aç.'); }
+  const payload={
+    type:'sl_draw_submission',
+    pusulabet_username:username,
+    fenerbahce:[...picks.fenerbahce],
+    galatasaray:[...picks.galatasaray]
+  };
+  submitBtn.disabled=true;
+  submitBtn.textContent='Kaydediliyor…';
+  try{
+    tg.sendData(JSON.stringify(payload));
+    tg.HapticFeedback?.notificationOccurred('success');
+    setMessage('Tahminin bota gönderildi.');
+    setTimeout(()=>tg.close(),700);
+  } catch(e){
+    submitBtn.disabled=false;
+    submitBtn.textContent='Tahminimi Kaydet';
+    setMessage('Gönderim başarısız. Mini App’i bottan tekrar aç.');
+  }
 });
 
 render();
