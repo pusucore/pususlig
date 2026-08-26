@@ -1,6 +1,10 @@
 const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); try { tg.setHeaderColor('#071248'); tg.setBackgroundColor('#030b35'); } catch {} }
 
+const TEAM_SPRITE_SRC = (window.__TEAM_SPRITE_PARTS?.length === 4)
+  ? `data:image/webp;base64,${window.__TEAM_SPRITE_PARTS.join('')}`
+  : './assets/team-sprite.webp?v=5';
+
 const teams = [
   ['psg','PSG',1,'FR'],['bayern','Bayern Münih',1,'DE'],['real-madrid','Real Madrid',1,'ES'],['liverpool','Liverpool',1,'EN'],['inter','Inter',1,'IT'],['man-city','Manchester City',1,'EN'],['arsenal','Arsenal',1,'EN'],['barcelona','Barcelona',1,'ES'],['atletico','Atletico Madrid',1,'ES'],
   ['dortmund','Borussia Dortmund',2,'DE'],['roma','Roma',2,'IT'],['sporting','Sporting CP',2,'PT'],['aston-villa','Aston Villa',2,'EN'],['porto','Porto',2,'PT'],['man-united','Manchester United',2,'EN'],['club-brugge','Club Brugge',2,'BE'],['real-betis','Real Betis',2,'ES'],['psv','PSV',2,'NL'],
@@ -41,7 +45,7 @@ function logoMarkup(team){
   const left = -(team.spriteX * 100);
   const top = -(team.spriteY * 100);
   return `<span class="team-logo" role="img" aria-label="${team.name}">
-    <img src="./assets/team-sprite.webp?v=4" alt="" draggable="false"
+    <img src="${TEAM_SPRITE_SRC}" alt="" draggable="false" decoding="sync"
       style="left:${left}%;top:${top}%"
       onerror="this.closest('.team-logo').classList.add('logo-error');this.remove()">
   </span>`;
