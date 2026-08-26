@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#06104a" />
+  <title>Şampiyonlar Ligi Kura Tahmini</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <div class="bg"></div>
+  <main class="app">
+    <section class="hero">
+      <div class="hero-space"></div>
+      <div class="glass intro">
+        <div class="eyebrow">27 AĞUSTOS · KURA TAHMİNİ</div>
+        <h1>Rakipleri sen seç</h1>
+        <p>Fenerbahçe ve Galatasaray için <strong>her torbadan 2 takım</strong> seç. Aynı ülkeden en fazla 2 rakip seçilebilir.</p>
+      </div>
+    </section>
+
+    <section class="glass user-box">
+      <label for="pbu">Pusulabet kullanıcı adın</label>
+      <input id="pbu" maxlength="80" autocomplete="off" placeholder="Kullanıcı adını yaz" />
+      <small>Katılımın backoffice'e bu kullanıcı adıyla kaydedilir.</small>
+    </section>
+
+    <div class="team-tabs" role="tablist">
+      <button class="team-tab active" data-target="fenerbahce">Fenerbahçe <span id="fb-count">0/8</span></button>
+      <button class="team-tab" data-target="galatasaray">Galatasaray <span id="gs-count">0/8</span></button>
+    </div>
+
+    <section id="picker" class="picker"></section>
+
+    <section class="glass summary">
+      <div class="summary-row"><span>Fenerbahçe</span><strong id="fb-summary">0 / 8</strong></div>
+      <div class="summary-row"><span>Galatasaray</span><strong id="gs-summary">0 / 8</strong></div>
+      <p id="rule-note">Her torbadan iki rakip seçmelisin.</p>
+    </section>
+
+    <button id="submit" class="submit" disabled>Tahminimi Kaydet</button>
+    <p id="status" class="status" aria-live="polite"></p>
+    <div class="safe-bottom"></div>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>
