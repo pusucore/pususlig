@@ -1,16 +1,24 @@
 const tg = window.Telegram?.WebApp;
-if (tg) { tg.ready(); tg.expand(); try { tg.setHeaderColor('#071248'); tg.setBackgroundColor('#030b35'); } catch {} }
+if (tg) {
+  tg.ready();
+  tg.expand();
+  try {
+    tg.setHeaderColor('#071248');
+    tg.setBackgroundColor('#030b35');
+  } catch {}
+}
 
-const TEAM_SPRITE_SRC = (window.__TEAM_SPRITE_PARTS?.length === 5)
-  ? `data:image/webp;base64,${window.__TEAM_SPRITE_PARTS.join('')}`
-  : '';
+// Kulüp logoları artık sprite yerine doğrudan PNG dosyalarından yüklenir.
+// Yeni bir logo yükledikten sonra Telegram cache'ini kırmak için bu değeri artırabilirsin.
+const LOGO_VERSION = '9';
+const LOGO_BASE = './assets/logos';
 
 const teams = [
   ['psg','PSG',1,'FR'],['bayern','Bayern Münih',1,'DE'],['real-madrid','Real Madrid',1,'ES'],['liverpool','Liverpool',1,'EN'],['inter','Inter',1,'IT'],['man-city','Manchester City',1,'EN'],['arsenal','Arsenal',1,'EN'],['barcelona','Barcelona',1,'ES'],['atletico','Atletico Madrid',1,'ES'],
   ['dortmund','Borussia Dortmund',2,'DE'],['roma','Roma',2,'IT'],['sporting','Sporting CP',2,'PT'],['aston-villa','Aston Villa',2,'EN'],['porto','Porto',2,'PT'],['man-united','Manchester United',2,'EN'],['club-brugge','Club Brugge',2,'BE'],['real-betis','Real Betis',2,'ES'],['psv','PSV',2,'NL'],
   ['fenerbahce','Fenerbahçe',3,'TR'],['galatasaray','Galatasaray',3,'TR'],['feyenoord','Feyenoord',3,'NL'],['lille','Lille',3,'FR'],['bodo-glimt','Bodø/Glimt',3,'NO'],['napoli','Napoli',3,'IT'],['leipzig','RB Leipzig',3,'DE'],['villarreal','Villarreal',3,'ES'],['shakhtar','Shakhtar Donetsk',3,'UA'],
   ['slavia-prague','Slavia Prag',4,'CZ'],['stuttgart','Stuttgart',4,'DE'],['aek','AEK',4,'GR'],['slovan','Slovan Bratislava',4,'SK'],['lask','LASK Linz',4,'AT'],['como','Como',4,'IT'],['lens','Lens',4,'FR'],['viking','Viking FK',4,'NO'],['sabah','Sabah FC',4,'AZ'],
-].map(([id,name,pot,country],i)=>({id,name,pot,country,spriteX:Math.floor(i/9),spriteY:i%9}));
+].map(([id,name,pot,country])=>({id,name,pot,country}));
 
 const byId = new Map(teams.map(t=>[t.id,t]));
 const picks = { fenerbahce: new Set(), galatasaray: new Set() };
@@ -41,14 +49,9 @@ function toggle(team){
 }
 
 function logoMarkup(team){
-  const left = -(team.spriteX * 100);
-  const top = -(team.spriteY * 100);
-  if(!TEAM_SPRITE_SRC){
-    return `<span class="team-logo logo-error" role="img" aria-label="${team.name}"></span>`;
-  }
+  const src = `${LOGO_BASE}/${team.id}.png?v=${LOGO_VERSION}`;
   return `<span class="team-logo" role="img" aria-label="${team.name}">
-    <img src="${TEAM_SPRITE_SRC}" alt="" draggable="false" decoding="sync"
-      style="left:${left}%;top:${top}%"
+    <img class="team-logo-img" src="${src}" alt="${team.name}" draggable="false" decoding="async" loading="lazy"
       onerror="this.closest('.team-logo').classList.add('logo-error');this.remove()">
   </span>`;
 }
