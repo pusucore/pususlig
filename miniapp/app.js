@@ -8,8 +8,7 @@ if (tg) {
   } catch {}
 }
 
-// Kulüp logoları artık sprite yerine doğrudan PNG dosyalarından yüklenir.
-// Yeni bir logo yükledikten sonra Telegram cache'ini kırmak için bu değeri artırabilirsin.
+// Kulüp logoları sprite yerine doğrudan PNG dosyalarından yüklenir.
 const LOGO_VERSION = '9';
 const LOGO_BASE = './assets/logos';
 
@@ -31,10 +30,12 @@ const pbu = document.getElementById('pbu');
 function selectedByPot(target,pot){ return [...picks[target]].map(id=>byId.get(id)).filter(t=>t?.pot===pot); }
 function countryCount(target,country){ return [...picks[target]].map(id=>byId.get(id)).filter(t=>t?.country===country).length; }
 function isComplete(target){ return picks[target].size===8 && [1,2,3,4].every(p=>selectedByPot(target,p).length===2); }
+function otherTarget(target){ return target==='fenerbahce' ? 'galatasaray' : 'fenerbahce'; }
 function setMessage(msg=''){ statusEl.textContent=msg; }
 
 function canSelect(target,team){
   if(team.country==='TR') return {ok:false,why:'Aynı ülke takımları eşleşemez.'};
+  if(picks[otherTarget(target)].has(team.id)) return {ok:false,why:`${team.name} diğer takım için zaten seçildi.`};
   if(selectedByPot(target,team.pot).length>=2) return {ok:false,why:`${team.pot}. torbadan zaten 2 takım seçtin.`};
   if(countryCount(target,team.country)>=2) return {ok:false,why:'Aynı ülkeden en fazla 2 rakip seçebilirsin.'};
   return {ok:true};
@@ -96,6 +97,8 @@ submitBtn.addEventListener('click',()=>{
   const username=pbu.value.trim();
   if(!username){ setMessage('Pusulabet kullanıcı adı zorunlu.'); return; }
   if(!isComplete('fenerbahce')||!isComplete('galatasaray')){ setMessage('Her iki takım için de 8 rakibi tamamla.'); return; }
+  const duplicate=[...picks.fenerbahce].find(id=>picks.galatasaray.has(id));
+  if(duplicate){ setMessage(`${byId.get(duplicate)?.name || 'Aynı rakip'} iki takım için birden seçilemez.`); return; }
   if(!tg?.sendData){ setMessage('Kayıt için bu sayfayı Telegram botundaki Mini App butonundan açmalısın.'); return; }
   const payload={
     type:'sl_draw_submission',
